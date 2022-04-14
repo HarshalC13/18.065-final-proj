@@ -1,0 +1,7 @@
+fastargs==1.2.0
+numpy==1.19.2
+Pillow==9.1.0
+torch==1.11.0
+torchvision==0.10.0a0
+tqdm==4.63.1
+wget==3.2
