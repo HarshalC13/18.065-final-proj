@@ -223,7 +223,7 @@ def make_gifs(save_path) -> None:
         format="GIF",
         append_images=pres_frames,
         save_all=True,
-        duration=100,
+        duration=10,
         loop=0,
     )
     no_one = no_pres_frames[0]
@@ -232,7 +232,7 @@ def make_gifs(save_path) -> None:
         format="GIF",
         append_images=no_pres_frames,
         save_all=True,
-        duration=100,
+        duration=10,
         loop=0,
     )
     clr_pres_gif_path = gif_path.joinpath("pres-color.gif")
