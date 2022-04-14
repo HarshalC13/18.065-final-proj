@@ -5,9 +5,11 @@ import copy
 import torch
 from torchvision import models
 from torch.nn.modules.container import Sequential
+from tqdm import tqdm
 import wget
 from fastargs import Section, Param
 from fastargs.decorators import param
+from typing import Tuple
 
 from losses import gram, content_loss, style_loss, tv_loss
 import utils
@@ -157,7 +159,6 @@ def get_optimizer(
 @param("opt.ctn_weight")
 @param("opt.sty_weight")
 @param("opt.tv_weight")
-@param("img.pres_color")
 def stylize(
     num_iters: int,
     log_freq: int,
@@ -169,7 +170,8 @@ def stylize(
     tv_weight: float,
     model: Sequential,
     optimizer: torch.optim.Optimizer,
-    pres_color: bool,
+    titles: Tuple[str, str],
+    save_path: Path,
 ):
     # Get features representations/Forward pass
     content_layers = ["relu4_2"]
@@ -186,7 +188,7 @@ def stylize(
     s_feat = get_features(model, style_tensor)
 
     i = [0]
-    while i[0] < num_iters:
+    for iter in tqdm(range(num_iters)):
 
         def closure():
             # Zero-out gradients
@@ -212,26 +214,25 @@ def stylize(
             total_loss.backward(retain_graph=True)
 
             # Print Loss, show and save image
-            i[0] += 1
-            if ((i[0] % log_freq) == 1) or (i[0] == num_iters):
+            if ((i[0] % log_freq) == 0) or (i[0] == num_iters):
                 print(
                     "Style Loss: {} Content Loss: {} TV Loss: {} Total Loss : {}".format(
                         s_loss.item(), c_loss.item(), t_loss, total_loss.item()
                     )
                 )
-                if pres_color:
-                    g_ = utils.transfer_color(
-                        utils.tensor_to_img(content_tensor.clone().detach()),
-                        utils.tensor_to_img(output_tensor.clone().detach()),
-                    )
-                else:
-                    g_ = utils.tensor_to_img(output_tensor.clone().detach())
+                # both color preserved and no color preserved images
+                pres_clr = utils.transfer_color(
+                    utils.tensor_to_img(content_tensor.clone().detach()),
+                    utils.tensor_to_img(output_tensor.clone().detach()),
+                )
+                no_pres = utils.tensor_to_img(output_tensor.clone().detach())
+                # save imgs
                 og_path = Path(os.getcwd())
-                save_path = og_path.joinpath("outputs")
                 os.chdir(save_path)
-                title = f"out-iter{i[0]}"
-                utils.save_image(g_, title)
+                utils.save_image(pres_clr, titles[0] + f"iter{i[0]}")
+                utils.save_image(no_pres, titles[1] + f"iter{i[0]}")
                 os.chdir(og_path)
+            i[0] += 1
 
             return total_loss
 

@@ -6,15 +6,14 @@
         "sty_weight": 1e2, 
         "tv_weight": 1e-3, 
         "num_iters": 1000,
-        "log_freq": 100, 
+        "log_freq": 50, 
         "path_to_weights": "models/vgg19.pth"
     }, 
     "img": {
         "max_img_size": 512, 
         "init_type": "random", 
-        "pres_color": true, 
         "pix_clip": true,
-        "content_path": "imgs/dome.png",
-        "style_path": "imgs/starry_night.jpeg"
+        "content_path": "imgs/rose.png",
+        "style_path": "imgs/murakami.jpeg"
     }
 }

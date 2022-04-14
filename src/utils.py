@@ -1,8 +1,12 @@
 import datetime
+import os
+from pathlib import Path
+from typing import Tuple
 
 import cv2
 import numpy as np
 import torch
+from PIL import Image
 from fastargs import Param, Section
 from fastargs.decorators import param
 from torchvision import transforms
@@ -10,7 +14,6 @@ from torchvision import transforms
 Section("img", "image related params").params(
     max_img_size=Param(int, required=True),
     init_type=Param(str, required=True),
-    pres_color=Param(bool, required=True),
     pix_clip=Param(bool, required=True),
     content_path=Param(str, required=True),
     style_path=Param(str, required=True),
@@ -135,9 +138,7 @@ def tensor_to_img(tensor: torch.tensor) -> np.ndarray:
 
 
 @param("img.init_type")
-def init_output(
-    content_tensor: torch.tensor, init_type: str = "random"
-) -> torch.tensor:
+def init_output(content_tensor: torch.tensor, init_type: str = "random") -> torch.tensor:
     B, C, H, W = content_tensor.shape
     if init_type == "random":
         tensor = torch.randn(C, H, W).mul(0.001).unsqueeze(0)
@@ -145,3 +146,97 @@ def init_output(
         tensor = content_tensor.clone().detach()
 
     return tensor
+
+
+@param("img.content_path")
+@param("img.style_path")
+def get_output_title(content_path, style_path) -> Tuple[str, str]:
+    """
+    Generates output title
+
+    Args:
+        content_path (str): path to content image.
+        style_path (str): path to style image.
+
+    Returns:
+        (str): titles for generated output image.
+    """
+    # drop img folder
+    ctn_name = content_path.split("/")[1]
+    sty_name = style_path.split("/")[1]
+    # drop extension
+    ctn_name = ctn_name.split(".")[0]
+    sty_name = sty_name.split(".")[0]
+    # combine: ctn + sty
+    core_name = ctn_name + "+" + sty_name
+    # make output directory
+    save_path = Path(os.getcwd()).joinpath(f"outputs/{core_name}")
+    save_path.mkdir(parents=True, exist_ok=True)
+    # final titles
+    c_pres, no_pres = "clr-pres-" + core_name, "no-pres-" + core_name
+    return c_pres, no_pres, save_path
+
+
+def remove_empty_output() -> None:
+    """
+    Deletes all empty directories in the output folder.
+    """
+    for folder in os.listdir(path="outputs/"):
+        try:
+            os.rmdir(os.path.join(f"outputs/{folder}"))
+            print("Directory '%s' has been removed successfully" % folder)
+        except OSError as error:
+            continue
+
+
+def make_gifs(save_path) -> None:
+    """
+    Generates a gif from all the outputs created.
+
+    Args:
+        save_path (Path): path where outputs are being saved.
+    """
+    # 1. get clr_pres and no_pres separate
+    pres = []
+    no_pres = []
+    for img in os.listdir(save_path):
+        if img.startswith("clr-pres-"):
+            pres.append[img]
+        elif img.startswith("no-pres-"):
+            no_pres.append(img)
+
+    # 2. sort each by iteration num
+    def key(s):
+        if key[-4] in "0123456789":
+            return (s[:-4], int(s[-4:]))
+        elif key[-3] in "0123456789":
+            return (s[:-3], int(s[-3:]))
+        elif key[-2] in "0123456789":
+            return (s[:-2], int(s[-2:]))
+
+    pres = sorted(pres, key=key)
+    no_pres = sorted(no_pres, key=key)
+    # 3. generate gifs
+    pres_frames = [Image.open(save_path.join(img)) for img in pres]
+    no_pres_frames = [Image.open(save_path.join(img)) for img in no_pres]
+    og_path = Path(os.getcwd())
+    os.chdir(save_path)
+    pres_one = pres_frames[0]
+    pres_one.save(
+        "pres-color.gif",
+        format="GIF",
+        append_images=pres_frames,
+        save_all=True,
+        duration=5000,
+        loop=0,
+    )
+    no_one = no_pres_frames[0]
+    no_one.save(
+        "no-pres.gif",
+        format="GIF",
+        append_images=no_pres_frames,
+        save_all=True,
+        duration=5000,
+        loop=0,
+    )
+    os.chdir(og_path)

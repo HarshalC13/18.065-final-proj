@@ -14,6 +14,7 @@ def run(content_path, style_path):
     content_img = utils.load_image(content_path)
     style_img = utils.load_image(style_path)
     device = utils.check_get_device(print_device=True)
+    *titles, save_path = utils.get_output_title()
     # setup tensors
     content_tensor = utils.img_to_tensor(content_img).to(device)
     style_tensor = utils.img_to_tensor(style_img).to(device)
@@ -28,12 +29,13 @@ def run(content_path, style_path):
         style_tensor=style_tensor,
         model=model,
         optimizer=optimizer,
+        titles=titles,
+        save_path=save_path,
     )
-    print(
-        "Training time was {:} (h:mm:ss:ms)".format(
-            utils.format_time(time.time() - start)
-        )
-    )
+    print("Training time was {:} (h:mm:ss:ms)".format(utils.format_time(time.time() - start)))
+    utils.make_gifs(save_path)
+    # get rid of output folders with no outputs
+    utils.remove_empty_output()
 
 
 if __name__ == "__main__":

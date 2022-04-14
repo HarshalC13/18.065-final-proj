@@ -1,5 +1,6 @@
 # local folders
 outputs/
+saved_imgs/
 imgs/
 models/
 .DS_Store
