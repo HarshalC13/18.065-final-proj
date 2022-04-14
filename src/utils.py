@@ -213,7 +213,9 @@ def make_gifs(save_path) -> None:
     pres_frames = [Image.open(save_path.joinpath(img)) for img in pres]
     no_pres_frames = [Image.open(save_path.joinpath(img)) for img in no_pres]
     og_path = Path(os.getcwd())
-    os.chdir(save_path)
+    gif_path = save_path.joinpath("gifs")
+    gif_path.mkdir(parents=True, exist_ok=True)
+    os.chdir(gif_path)
     pres_one = pres_frames[0]
     pres_one.save(
         "pres-color.gif",
