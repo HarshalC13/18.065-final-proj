@@ -13,7 +13,7 @@
         "max_img_size": 512, 
         "init_type": "random", 
         "pix_clip": true,
-        "content_path": "imgs/rose.png",
-        "style_path": "imgs/murakami.jpeg"
+        "content_path": "imgs/dome.png",
+        "style_path": "imgs/starry_night.jpeg"
     }
 }

@@ -6,11 +6,12 @@ from typing import Tuple
 import cv2
 import numpy as np
 import torch
-from PIL import Image
+import wandb
 from fastargs import Param, Section
 from fastargs.decorators import param
-from torchvision import transforms
 from natsort import natsorted
+from PIL import Image
+from torchvision import transforms
 
 Section("img", "image related params").params(
     max_img_size=Param(int, required=True),
@@ -234,4 +235,25 @@ def make_gifs(save_path) -> None:
         duration=100,
         loop=0,
     )
+    clr_pres_gif_path = gif_path.joinpath("pres-color.gif")
+    no_pres_gif_path = gif_path.joinpath("no-color.gif")
+    wandb.log(
+        {"Color Preservation Steps": wandb.Video(clr_pres_gif_path, format="gif")},
+        {"Traditional Steps": wandb.Video(no_pres_gif_path, format="gif")},
+    )
     os.chdir(og_path)
+
+
+def update_wandb_config(map, wandb_config=None):
+    """
+    Update wandb config with run params and return.
+    Args:
+        map (dict): map with params.
+        wand_config (dict): config for wandb run.
+    Returns:
+        dict config for wandb run.
+    """
+    if wandb_config is None:
+        wandb_config = {}
+    wandb_config.update(map)
+    return wandb_config

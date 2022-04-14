@@ -1,6 +1,9 @@
+import time
+import json
+
+import wandb
 from fastargs import get_current_config
 from fastargs.decorators import param
-import time
 
 import utils
 from model import get_model, get_optimizer, stylize
@@ -43,4 +46,10 @@ if __name__ == "__main__":
     config.collect_config_file("src/config.json")
     config.validate(mode="stderr")
     config.summary()
+    params = json.load(open("src/config.json"))
+    wandb_config = utils.update_wandb_config(params)
+    wandb.init(
+        project="18.065", entity="harshalc", config=wandb_config, name="dome_starry_night"
+    )
     run()
+    wandb.finish()

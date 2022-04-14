@@ -1,18 +1,19 @@
+import copy
 import os
 from pathlib import Path
-import copy
-
-import torch
-from torchvision import models
-from torch.nn.modules.container import Sequential
-from tqdm import tqdm
-import wget
-from fastargs import Section, Param
-from fastargs.decorators import param
 from typing import Tuple
 
-from losses import gram, content_loss, style_loss, tv_loss
+import torch
+import wandb
+import wget
+from fastargs import Param, Section
+from fastargs.decorators import param
+from torch.nn.modules.container import Sequential
+from torchvision import models
+from tqdm import tqdm
+
 import utils
+from losses import content_loss, gram, style_loss, tv_loss
 
 Section("opt", "optimization arguments").params(
     opt_type=Param(str, required=True),
@@ -217,7 +218,7 @@ def stylize(
             # Backprop
             total_loss.backward(retain_graph=True)
 
-            # Print Loss, show and save image
+            # update loss, save imgs
             if ((i[0] % log_freq) == 0) or (i[0] == num_iters):
                 t.set_postfix(
                     style_loss=s_loss.item(),
@@ -236,7 +237,18 @@ def stylize(
                 os.chdir(save_path)
                 utils.save_image(pres_clr, titles[0] + f"iter{i[0]}")
                 utils.save_image(no_pres, titles[1] + f"iter{i[0]}")
+                # wandb logs
+                img_log = {
+                    "color preserved": wandb.Image(
+                        pres_clr, caption=f"Source Color Preserved Output Iter {i[0]}"
+                    ),
+                    "traditional": wandb.Image(
+                        no_pres, caption=f"Traditional NS Output Iter {i[0]}"
+                    ),
+                }
+                wandb.log(img_log)
                 os.chdir(og_path)
+
             i[0] += 1
 
             return total_loss
