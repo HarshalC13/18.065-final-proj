@@ -10,6 +10,7 @@ from PIL import Image
 from fastargs import Param, Section
 from fastargs.decorators import param
 from torchvision import transforms
+from natsort import natsorted
 
 Section("img", "image related params").params(
     max_img_size=Param(int, required=True),
@@ -201,24 +202,16 @@ def make_gifs(save_path) -> None:
     no_pres = []
     for img in os.listdir(save_path):
         if img.startswith("clr-pres-"):
-            pres.append[img]
+            pres.append(img)
         elif img.startswith("no-pres-"):
             no_pres.append(img)
 
     # 2. sort each by iteration num
-    def key(s):
-        if key[-4] in "0123456789":
-            return (s[:-4], int(s[-4:]))
-        elif key[-3] in "0123456789":
-            return (s[:-3], int(s[-3:]))
-        elif key[-2] in "0123456789":
-            return (s[:-2], int(s[-2:]))
-
-    pres = sorted(pres, key=key)
-    no_pres = sorted(no_pres, key=key)
+    pres = natsorted(pres)
+    no_pres = natsorted(no_pres)
     # 3. generate gifs
-    pres_frames = [Image.open(save_path.join(img)) for img in pres]
-    no_pres_frames = [Image.open(save_path.join(img)) for img in no_pres]
+    pres_frames = [Image.open(save_path.joinpath(img)) for img in pres]
+    no_pres_frames = [Image.open(save_path.joinpath(img)) for img in no_pres]
     og_path = Path(os.getcwd())
     os.chdir(save_path)
     pres_one = pres_frames[0]
@@ -227,7 +220,7 @@ def make_gifs(save_path) -> None:
         format="GIF",
         append_images=pres_frames,
         save_all=True,
-        duration=5000,
+        duration=100,
         loop=0,
     )
     no_one = no_pres_frames[0]
@@ -236,7 +229,7 @@ def make_gifs(save_path) -> None:
         format="GIF",
         append_images=no_pres_frames,
         save_all=True,
-        duration=5000,
+        duration=100,
         loop=0,
     )
     os.chdir(og_path)

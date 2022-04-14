@@ -47,8 +47,11 @@ def load_vgg19(path_to_weights: str) -> Sequential:
     Args:
         path_to_weights (str): local path to the vgg19 weights.
     """
-    if not Path(path_to_weights).exists:
-        raise RuntimeError("Path to model weights must exist before loading!")
+    if not Path(path_to_weights).exists():
+        download_vgg19()
+        raise RuntimeError(
+            "Path to model weights must exist before loading! Attempting to download them now..."
+        )
 
     vgg = models.vgg19(pretrained=False)
     vgg.load_state_dict(torch.load(path_to_weights), strict=False)
@@ -188,7 +191,8 @@ def stylize(
     s_feat = get_features(model, style_tensor)
 
     i = [0]
-    for iter in tqdm(range(num_iters)):
+    t = tqdm(range(num_iters))
+    for iter in t:
 
         def closure():
             # Zero-out gradients
@@ -215,10 +219,11 @@ def stylize(
 
             # Print Loss, show and save image
             if ((i[0] % log_freq) == 0) or (i[0] == num_iters):
-                print(
-                    "Style Loss: {} Content Loss: {} TV Loss: {} Total Loss : {}".format(
-                        s_loss.item(), c_loss.item(), t_loss, total_loss.item()
-                    )
+                t.set_postfix(
+                    style_loss=s_loss.item(),
+                    content_loss=c_loss.item(),
+                    tv_loss=t_loss,
+                    total_loss=total_loss.item(),
                 )
                 # both color preserved and no color preserved images
                 pres_clr = utils.transfer_color(
