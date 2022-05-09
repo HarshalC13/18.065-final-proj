@@ -223,7 +223,7 @@ def make_gifs(save_path) -> None:
         format="GIF",
         append_images=pres_frames,
         save_all=True,
-        duration=10,
+        duration=1000,
         loop=0,
     )
     no_one = no_pres_frames[0]
@@ -232,14 +232,16 @@ def make_gifs(save_path) -> None:
         format="GIF",
         append_images=no_pres_frames,
         save_all=True,
-        duration=10,
+        duration=1000,
         loop=0,
     )
-    clr_pres_gif_path = gif_path.joinpath("pres-color.gif")
-    no_pres_gif_path = gif_path.joinpath("no-color.gif")
+    clr_pres_gif_path = str(gif_path.joinpath("pres-color.gif"))
+    no_pres_gif_path = str(gif_path.joinpath("no-pres.gif"))
     wandb.log(
-        {"Color Preservation Steps": wandb.Video(clr_pres_gif_path, format="gif")},
-        {"Traditional Steps": wandb.Video(no_pres_gif_path, format="gif")},
+        {
+            "Color Preservation Steps": wandb.Video(clr_pres_gif_path, format="gif"),
+            "Traditional Steps": wandb.Video(no_pres_gif_path, format="gif"),
+        },
     )
     os.chdir(og_path)
 

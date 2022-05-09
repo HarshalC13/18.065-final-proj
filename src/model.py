@@ -219,11 +219,11 @@ def stylize(
             total_loss.backward(retain_graph=True)
 
             # update loss, save imgs
-            if ((i[0] % log_freq) == 0) or (i[0] == num_iters):
+            if ((i[0] % log_freq) == 0) or (i[0] == num_iters - 1):
                 t.set_postfix(
                     style_loss=s_loss.item(),
                     content_loss=c_loss.item(),
-                    tv_loss=t_loss,
+                    tv_loss=t_loss.item(),
                     total_loss=total_loss.item(),
                 )
                 # both color preserved and no color preserved images
@@ -240,10 +240,11 @@ def stylize(
                 # wandb logs
                 img_log = {
                     "color preserved": wandb.Image(
-                        pres_clr, caption=f"Source Color Preserved Output Iter {i[0]}"
+                        pres_clr[..., ::-1],
+                        caption=f"Source Color Preserved Output Iter {i[0]}",
                     ),
                     "traditional": wandb.Image(
-                        no_pres, caption=f"Traditional NS Output Iter {i[0]}"
+                        no_pres[..., ::-1], caption=f"Traditional NS Output Iter {i[0]}"
                     ),
                 }
                 wandb.log(img_log)
